@@ -20,7 +20,10 @@ namespace WebApiCar.Controllers
             new Car(){Id = 4,Model="x0",Vendor="Tesla", Price=1400000},
         };
 
-
+        /// <summary>
+        /// Method for get all the cars from the static list
+        /// </summary>
+        /// <returns>List of cars</returns>
         // GET: api/Cars
         [HttpGet]
         public IEnumerable<Car> Get()
@@ -35,6 +38,10 @@ namespace WebApiCar.Controllers
             return carList.FirstOrDefault(x => x.Id == id);
         }
 
+        /// <summary>
+        /// Post a new car to the static list
+        /// </summary>
+        /// <param name="value"></param>
         // POST: api/Cars
         [HttpPost]
         public void Post([FromBody] Car value)
