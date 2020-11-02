@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,9 @@ namespace WebApiCar.Controllers
     [ApiController]
     public class CarsController : ControllerBase
     {
+
+        static string conn = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=CarDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
         public static List<Car> carList = new List<Car>()
         {
             new Car(){Id = 1,Model="x3",Vendor="Tesla", Price=400000},
@@ -28,7 +32,36 @@ namespace WebApiCar.Controllers
         [HttpGet]
         public IEnumerable<Car> Get()
         {
-            return carList;
+            var carList = new List<Car>();
+
+            string selectall = "select id, vendor, model, price from Car";
+
+            using (SqlConnection databaseConnection = new SqlConnection(conn))
+            {
+                using (SqlCommand selectCommand = new SqlCommand(selectall, databaseConnection))
+                {
+                    databaseConnection.Open();
+
+                    using (SqlDataReader reader = selectCommand.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int id = reader.GetInt32(0);
+                            string vendor = reader.GetString(1);
+                            string model = reader.GetString(2);
+                            int price = reader.GetInt32(3);
+
+                            carList.Add(new Car(id,vendor,model,price));
+
+                        }
+
+                    }
+                }
+
+
+                    }
+
+                return carList;
         }
 
         // GET: api/Cars/5
