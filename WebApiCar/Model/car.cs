@@ -16,5 +16,18 @@ namespace WebApiCar.Model
         public string Vendor { get; set; }
         public string Model { get; set; }
         public int Price { get; set; }
+
+        public Car()
+        {
+
+        }
+
+        public Car(int id, string vendor, string model, int price)
+        {
+            Id = id;
+            Vendor = vendor;
+            Model = model;
+            Price = price;
+        }
     }
 }
