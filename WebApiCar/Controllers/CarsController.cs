@@ -64,6 +64,21 @@ namespace WebApiCar.Controllers
                 return carList;
         }
 
+        //[Route("/byVendor/{vendor}")]
+        [HttpGet(("byVendor/{vendor}"), Name ="GetByVendor")]
+        public IEnumerable<Car> GetByVendor(string vendor)
+        {
+            //should be an SQL statement
+            return carList.Where(x=> x.Vendor == vendor);
+        }
+
+        [HttpGet(("byVendor/{vendor}/price/{price}"), Name = "GetByVendorAndPrice")]
+        public IEnumerable<Car> GetByVendorandPrice(string vendor, int price)
+        {
+            //shold be an sql statements
+            return carList.Where(x => x.Vendor == vendor && x.Price == price);
+        }
+
         // GET: api/Cars/5
         [HttpGet("{id}", Name = "Get")]
         public Car Get(int id)
