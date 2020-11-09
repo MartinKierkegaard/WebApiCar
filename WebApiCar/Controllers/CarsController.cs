@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,16 +14,10 @@ namespace WebApiCar.Controllers
     [ApiController]
     public class CarsController : ControllerBase
     {
-
-        static string conn = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=CarDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-
-        public static List<Car> carList = new List<Car>()
-        {
-            new Car(){Id = 1,Model="x3",Vendor="Tesla", Price=400000},
-            new Car(){Id = 2,Model="x2",Vendor="Tesla", Price=600000},
-            new Car(){Id = 3,Model="x1",Vendor="Tesla", Price=800000},
-            new Car(){Id = 4,Model="x0",Vendor="Tesla", Price=1400000},
-        };
+        /// <summary>
+        /// using the local database called MyCarDatabase 
+        /// </summary>
+        static string conn = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyCarDatabase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 
         /// <summary>
         /// Method for get all the cars from the static list
@@ -51,39 +46,41 @@ namespace WebApiCar.Controllers
                             string model = reader.GetString(2);
                             int price = reader.GetInt32(3);
 
-                            carList.Add(new Car(id,vendor,model,price));
+                            carList.Add(new Car(id, vendor, model, price));
 
                         }
-
                     }
                 }
+            }
 
-
-                    }
-
-                return carList;
+            return carList;
         }
 
         //[Route("/byVendor/{vendor}")]
-        [HttpGet(("byVendor/{vendor}"), Name ="GetByVendor")]
+        [HttpGet(("byVendor/{vendor}"), Name = "GetByVendor")]
         public IEnumerable<Car> GetByVendor(string vendor)
         {
-            //should be an SQL statement
-            return carList.Where(x=> x.Vendor == vendor);
+            string sql = $"select id, vendor, model, price from Car Where vendor = '{vendor}'";
+
+            return GetCarsFromDB(sql);
         }
 
         [HttpGet(("byVendor/{vendor}/price/{price}"), Name = "GetByVendorAndPrice")]
         public IEnumerable<Car> GetByVendorandPrice(string vendor, int price)
         {
-            //shold be an sql statements
-            return carList.Where(x => x.Vendor == vendor && x.Price == price);
+            string sql = $"select id, vendor, model, price from Car Where vendor = '{vendor}' and price = {price}";
+            return GetCarsFromDB(sql);
         }
 
         // GET: api/Cars/5
         [HttpGet("{id}", Name = "Get")]
         public Car Get(int id)
         {
-            return carList.FirstOrDefault(x => x.Id == id);
+
+            string sql = $"select id, vendor, model, price from Car Where id = {id}";
+
+            //only one row is returned from the DB, so I use FirstOrdefault() at the list
+            return GetCarsFromDB(sql).FirstOrDefault();
         }
 
         /// <summary>
@@ -107,28 +104,92 @@ namespace WebApiCar.Controllers
                     int rowaffected = insertCommand.ExecuteNonQuery();
                     Console.WriteLine($"rows affected: {rowaffected}");
                 }
-                //    Car newcar = new Car() { Id = GetId(), Model = value.Model, Vendor = value.Vendor, Price = value.Price };
-                //carList.Add(newcar);
             }
         }
+
+
         // PUT: api/Cars/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] Car value)
         {
+            string updateCarSql = "update car set vendor = @vendor, model = @model , price = @price where id = @id";
+            using (SqlConnection databaseconnection = new SqlConnection(conn))
+            {
+                databaseconnection.Open();
+                using (SqlCommand insertCommand = new SqlCommand(updateCarSql, databaseconnection))
+                {
+                    insertCommand.Parameters.AddWithValue("@id", value.Id);
+                    insertCommand.Parameters.AddWithValue("@vendor", value.Vendor);
+                    insertCommand.Parameters.AddWithValue("@model", value.Model);
+                    insertCommand.Parameters.AddWithValue("@price", value.Price);
+                    int rowaffected = insertCommand.ExecuteNonQuery();
+                    Console.WriteLine($"rows affected: {rowaffected}");
+                }
+            }
         }
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
-            carList.Remove(Get(id));
+            int rowaffected = 0;
+            string deleteCarSql = "delete from car where id = @id";
+            using (SqlConnection databaseconnection = new SqlConnection(conn))
+            {
+                databaseconnection.Open();
+                using (SqlCommand insertCommand = new SqlCommand(deleteCarSql, databaseconnection))
+                {
+                    insertCommand.Parameters.AddWithValue("@id", id);
+                   
+                    Console.WriteLine($"rows affected: {rowaffected}");
+                }
+            }
         }
 
-       int GetId()
+        //int GetId()
+        //{
+        //    int max = carList.Max(x => x.Id);
+        //    return max + 1;
+        //}
+
+
+
+        /// <summary>
+        /// generic Sql method to use for http gets(select) from the car table
+        /// </summary>
+        /// <param name="sql">the sql that will be executed to teh Database</param>
+        /// <returns>a list of car objects</returns>
+        private List<Car> GetCarsFromDB(string sql)
         {
-            int max = carList.Max(x => x.Id);
-            return max+1;
+            
+            var carList = new List<Car>();
+
+            using (SqlConnection databaseConnection = new SqlConnection(conn))
+            {
+                using (SqlCommand sqlCommand = new SqlCommand(sql, databaseConnection))
+                {
+                    databaseConnection.Open();
+
+                    using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int id = reader.GetInt32(0);
+                            string vendor = reader.GetString(1);
+                            string model = reader.GetString(2);
+                            int price = reader.GetInt32(3);
+
+                            carList.Add(new Car(id, vendor, model, price));
+
+                        }
+
+                    }
+                }
+            }
+
+            return carList;
         }
+
 
     }
 }
