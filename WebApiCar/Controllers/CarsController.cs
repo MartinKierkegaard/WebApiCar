@@ -65,6 +65,7 @@ namespace WebApiCar.Controllers
             return GetCarsFromDB(sql);
         }
 
+
         [HttpGet(("byVendor/{vendor}/price/{price}"), Name = "GetByVendorAndPrice")]
         public IEnumerable<Car> GetByVendorandPrice(string vendor, int price)
         {
@@ -116,13 +117,13 @@ namespace WebApiCar.Controllers
             using (SqlConnection databaseconnection = new SqlConnection(conn))
             {
                 databaseconnection.Open();
-                using (SqlCommand insertCommand = new SqlCommand(updateCarSql, databaseconnection))
+                using (SqlCommand updateCommand = new SqlCommand(updateCarSql, databaseconnection))
                 {
-                    insertCommand.Parameters.AddWithValue("@id", value.Id);
-                    insertCommand.Parameters.AddWithValue("@vendor", value.Vendor);
-                    insertCommand.Parameters.AddWithValue("@model", value.Model);
-                    insertCommand.Parameters.AddWithValue("@price", value.Price);
-                    int rowaffected = insertCommand.ExecuteNonQuery();
+                    updateCommand.Parameters.AddWithValue("@id", value.Id);
+                    updateCommand.Parameters.AddWithValue("@vendor", value.Vendor);
+                    updateCommand.Parameters.AddWithValue("@model", value.Model);
+                    updateCommand.Parameters.AddWithValue("@price", value.Price);
+                    int rowaffected = updateCommand.ExecuteNonQuery();
                     Console.WriteLine($"rows affected: {rowaffected}");
                 }
             }
@@ -137,10 +138,11 @@ namespace WebApiCar.Controllers
             using (SqlConnection databaseconnection = new SqlConnection(conn))
             {
                 databaseconnection.Open();
-                using (SqlCommand insertCommand = new SqlCommand(deleteCarSql, databaseconnection))
+                using (SqlCommand deleteCommand = new SqlCommand(deleteCarSql, databaseconnection))
                 {
-                    insertCommand.Parameters.AddWithValue("@id", id);
-                   
+                    deleteCommand.Parameters.AddWithValue("@id", id);
+                    rowaffected = deleteCommand.ExecuteNonQuery();
+
                     Console.WriteLine($"rows affected: {rowaffected}");
                 }
             }
