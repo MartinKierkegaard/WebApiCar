@@ -119,7 +119,7 @@ namespace WebApiCar.Controllers
                 databaseconnection.Open();
                 using (SqlCommand updateCommand = new SqlCommand(updateCarSql, databaseconnection))
                 {
-                    updateCommand.Parameters.AddWithValue("@id", value.Id);
+                    updateCommand.Parameters.AddWithValue("@id", id);
                     updateCommand.Parameters.AddWithValue("@vendor", value.Vendor);
                     updateCommand.Parameters.AddWithValue("@model", value.Model);
                     updateCommand.Parameters.AddWithValue("@price", value.Price);
